@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Streamer Spotify Now Playing — Local Demo</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="mainContainer">
+    <div id="albumArtBox">
+      <img id="streamerLogo" src="./assets/streamer-logo.webp" alt="Streamer logo">
+    </div>
+
+    <div id="songInfoBox">
+      <div id="songInfo">
+        <div id="textArea">
+          <div id="songLabel">Blinding Lights</div>
+          <div id="artistLabel">The Weeknd</div>
+          <div id="times">
+            <div id="progressTime">0:42</div>
+            <div id="timeRemaining">-2:34</div>
+          </div>
+          <div id="progressBg"><div id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <div id="backgroundArt">
+        <img id="backgroundImage" src="./assets/streamer-logo.webp" alt="">
+      </div>
+    </div>
+  </div>
+
+  <div id="demoControls">
+    <button id="prevBtn">Previous</button>
+    <button id="playBtn">Show / Play</button>
+    <button id="pauseBtn">Pause / Hide</button>
+    <button id="nextBtn">Next</button>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
