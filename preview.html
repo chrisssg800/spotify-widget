@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>3L Spotify Widget Preview</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .widget {
+            position: relative;
+            width: 800px;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 12px;
+            background: #111;
+            color: white;
+        }
+
+        /* Blurred logo background */
+        .background {
+            position: absolute;
+            inset: -30px;
+            background-image: url("images/f09ba42a5a486d0d0e79b6a52ec7b7dc.png");
+            background-size: cover;
+            background-position: center;
+            filter: blur(25px);
+            opacity: 0.35;
+            transform: scale(1.15);
+        }
+
+        /* Dark overlay over the background */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        /* Main content */
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+        }
+
+        /* Logo */
+        .logo-container {
+            width: 150px;
+            height: 150px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        .logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Song information */
+        .info {
+            min-width: 0;
+            flex: 1;
+            margin-left: 25px;
+        }
+
+        .song {
+            font-size: 28px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 8px;
+        }
+
+        .artist {
+            font-size: 19px;
+            opacity: 0.75;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 22px;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 5px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.25);
+            overflow: hidden;
+        }
+
+        .progress {
+            width: 38%;
+            height: 100%;
+            background: white;
+            border-radius: 10px;
+        }
+
+        /* Time */
+        .times {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            opacity: 0.65;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="widget">
+
+        <div class="background"></div>
+        <div class="overlay"></div>
+
+        <div class="content">
+
+            <div class="logo-container">
+                <img
+                    class="logo"
+                    src="images/f09ba42a5a486d0d0e79b6a52ec7b7dc.png"
+                    alt="Streamer Logo"
+                >
+            </div>
+
+            <div class="info">
+
+                <div class="song">
+                    Blinding Lights
+                </div>
+
+                <div class="artist">
+                    The Weeknd
+                </div>
+
+                <div class="progress-container">
+
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+
+                    <div class="times">
+                        <span>1:24</span>
+                        <span>-2:17</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
