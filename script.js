@@ -105,7 +105,7 @@ async function GetCurrentlyPlaying(refreshInterval) {
 function UpdatePlayer(data) {
 	const isPlaying = data.is_playing;							// The play/pause state of the player
 	const songUri = data.item.uri;
-	const albumArt = "images/streamer-logo.png";					// The album art URL
+	const albumArt = "images/f09ba42a5a486d0d0e79b6a52ec7b7dc.png";					// The album art URL
 	const artist = `${data.item.artists[0].name}`;				// Name of the artist
 	const name = `${data.item.name}`;							// Name of the song
 	const duration = `${data.item.duration_ms/1000}`;			// The duration of the song in seconds
