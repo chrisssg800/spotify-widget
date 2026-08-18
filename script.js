@@ -1,267 +1,82 @@
-///////////////
-// PARAMETRS //
-///////////////
+// Local demonstration mode.
+// In the real Spotify-connected version, Spotify playback state will control show()/hide().
+// This keeps the visual structure inspired by Nutty's open-source Spotify widget,
+// but uses local demo data because a Spotify Web API app requires Premium in
+// current Spotify Development Mode.
 
-const queryString = window.location.search;
-const urlParams = new URLSearchParams(queryString);
+const tracks = [
+  { name: "Blinding Lights", artist: "The Weeknd", duration: 212 },
+  { name: "I Just Died in Your Arms", artist: "Cutting Crew", duration: 277 },
+  { name: "Still Loving You", artist: "Scorpions", duration: 390 },
+  { name: "Con te partirò", artist: "Andrea Bocelli", duration: 260 }
+];
 
-const client_id = urlParams.get("client_id") || "";
-const client_secret = urlParams.get("client_secret") || "";
-let refresh_token = urlParams.get("refresh_token") || "";
-let access_token = "";
+let trackIndex = 0;
+let progress = 42;
+let playing = false;
 
-const visibilityDuration = urlParams.get("duration") || 0;
-const hideAlbumArt = urlParams.has("hideAlbumArt");
+const main = document.getElementById("mainContainer");
+const song = document.getElementById("songLabel");
+const artist = document.getElementById("artistLabel");
+const progressBar = document.getElementById("progressBar");
+const progressTime = document.getElementById("progressTime");
+const timeRemaining = document.getElementById("timeRemaining");
 
-let currentState = false;
-let currentSongUri = "";
-
-
-
-/////////////////
-// SPOTIFY API //
-/////////////////
-
-// Update the access token - this expires so needs to be refreshed with refresh_token
-async function RefreshAccessToken() {
-	console.debug(`Client ID: ${client_id}`);
-	console.debug(`Client Secret: ${client_secret}`);
-	console.debug(`Refresh Token: ${refresh_token}`);
-
-    let body = "grant_type=refresh_token";
-    body += "&refresh_token=" + refresh_token;
-    body += "&client_id=" + client_id;
-
-	const response = await fetch("https://accounts.spotify.com/api/token", {
-		method: "POST",
-		headers: {
-			'Authorization': `Basic ${btoa(client_id + ":" + client_secret)}`,
-			'Content-Type': 'application/x-www-form-urlencoded'
-		},
-		body: body
-	});
-
-	// If we got a response, save the access token
-	if (response.ok)
-	{
-		const responseData = await response.json();
-		console.debug(responseData);
-		//refresh_token = responseData.refresh_token;			// Unsure if we need to replace the refresh_token but do it just in case
-		access_token = responseData.access_token;			// Save access token for all future API calls
-	}
-	else
-	{
-		console.error(`${response.status}`);
-	}
+function formatTime(seconds) {
+  seconds = Math.max(0, Math.floor(seconds));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-async function GetCurrentlyPlaying(refreshInterval) {
-	try {
-		// Get the current player information from Spotify
-		const response = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
-			method: "GET",
-			headers: {
-				'Authorization': `Bearer ${access_token}`,
-				'Content-Type': 'application/json'
-			}
-		})
-	
-		// If we got a response, save the access token
-		if (response.ok)
-		{
-			const responseData = await response.json();
-			console.debug(responseData);
-			UpdatePlayer(responseData);
-		}
-		else
-		{
-			switch (response.status)
-			{
-				case 401:
-					console.debug(`${response.status}`)
-					RefreshAccessToken();
-					break;
-				default:
-					console.error(`${response.status}`)
-			}
-		}
-		// Refresh
-		setTimeout(() => {
-			GetCurrentlyPlaying()
-		}, 1000);
-	}
-	catch (error)
-	{
-		console.debug(error);
-		SetVisibility(false);
-		
-		// Try again in 2 seconds
-		setTimeout(() => {
-			GetCurrentlyPlaying()
-		}, 2000);
-	}
+function setTrack(index, reset = true) {
+  trackIndex = (index + tracks.length) % tracks.length;
+  const t = tracks[trackIndex];
+
+  song.classList.add("fade");
+  artist.classList.add("fade");
+
+  setTimeout(() => {
+    song.textContent = t.name;
+    artist.textContent = t.artist;
+    song.classList.remove("fade");
+    artist.classList.remove("fade");
+  }, 180);
+
+  if (reset) progress = 0;
+  updateProgress();
+  if (playing) show();
 }
 
-function UpdatePlayer(data) {
-	const isPlaying = data.is_playing;							// The play/pause state of the player
-	const songUri = data.item.uri;
-	const albumArt = "images/f09ba42a5a486d0d0e79b6a52ec7b7dc.png";					// The album art URL
-	const artist = `${data.item.artists[0].name}`;				// Name of the artist
-	const name = `${data.item.name}`;							// Name of the song
-	const duration = `${data.item.duration_ms/1000}`;			// The duration of the song in seconds
-	const progress = `${data.progress_ms/1000}`;				// The current position in seconds
-
-	// Set the visibility of the player, but only if the state is different than the last time we checked
-	if (isPlaying != currentState) {
-
-		// Set player visibility
-		if (!isPlaying)
-		{
-			console.debug("Hiding player...");
-			SetVisibility(false);
-		}
-		else
-		{
-			console.debug("Showing player...");
-			setTimeout(() => {
-				SetVisibility(true);
-
-				if (visibilityDuration > 0) {
-					setTimeout(() => {
-						SetVisibility(false, false);
-					}, visibilityDuration * 1000);
-				}
-			}, 500);
-		}
-	}
-
-	if (songUri != currentSongUri) {		
-		if (isPlaying) {
-			console.debug("Showing player...");
-			setTimeout(() => {
-				SetVisibility(true);
-
-				if (visibilityDuration > 0) {
-					setTimeout(() => {
-						SetVisibility(false, false);
-					}, visibilityDuration * 1000);
-				}
-			}, 500);
-	
-			currentSongUri = songUri;
-		}
-	}
-
-	// Set thumbnail
-	UpdateAlbumArt(document.getElementById("albumArt"), albumArt);
-	UpdateAlbumArt(document.getElementById("backgroundImage"), albumArt);
-
-	// Set song info
-	UpdateTextLabel(document.getElementById("artistLabel"), artist);
-	UpdateTextLabel(document.getElementById("songLabel"), name);
-	
-	// Set progressbar
-	const progressPerc = ((progress / duration) * 100);			// Progress expressed as a percentage
-	const progressTime = ConvertSecondsToMinutesSoThatItLooksBetterOnTheOverlay(progress);
-	const timeRemaining = ConvertSecondsToMinutesSoThatItLooksBetterOnTheOverlay(duration - progress);
-	console.debug(`Progress: ${progressTime}`);
-	console.debug(`Time Remaining: ${timeRemaining}`);
-	document.getElementById("progressBar").style.width = `${progressPerc}%`;
-	document.getElementById("progressTime").innerHTML = progressTime;
-	document.getElementById("timeRemaining").innerHTML = `-${timeRemaining}`;
-
-	setTimeout(() => {
-		document.getElementById("albumArtBack").src = albumArt;
-		document.getElementById("backgroundImageBack").src = albumArt;
-	}, 1000);
+function updateProgress() {
+  const t = tracks[trackIndex];
+  const pct = Math.min(100, (progress / t.duration) * 100);
+  progressBar.style.width = `${pct}%`;
+  progressTime.textContent = formatTime(progress);
+  timeRemaining.textContent = `-${formatTime(t.duration - progress)}`;
 }
 
-function UpdateTextLabel(div, text) {
-	if (div.innerText != text) {
-		div.setAttribute("class", "text-fade");
-		setTimeout(() => {
-			div.innerText = text;
-			div.setAttribute("class", ".text-show");
-		}, 500);
-	}
+function show() {
+  playing = true;
+  main.classList.add("visible");
 }
 
-function UpdateAlbumArt(div, imgsrc) {
-	if (div.src != imgsrc) {
-		div.setAttribute("class", "text-fade");
-		setTimeout(() => {
-			div.src = imgsrc;
-			div.setAttribute("class", "text-show");
-		}, 500);
-	}
+function hide() {
+  playing = false;
+  main.classList.remove("visible");
 }
 
+document.getElementById("playBtn").onclick = () => { playing = true; show(); };
+document.getElementById("pauseBtn").onclick = () => { playing = false; hide(); };
+document.getElementById("nextBtn").onclick = () => setTrack(trackIndex + 1);
+document.getElementById("prevBtn").onclick = () => setTrack(trackIndex - 1);
 
+setInterval(() => {
+  if (!playing) return;
+  progress++;
+  if (progress >= tracks[trackIndex].duration) {
+    setTrack(trackIndex + 1);
+  } else {
+    updateProgress();
+  }
+}, 1000);
 
-//////////////////////
-// HELPER FUNCTIONS //
-//////////////////////
-
-function ConvertSecondsToMinutesSoThatItLooksBetterOnTheOverlay(time) {
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.trunc(time - minutes * 60);
-
-	return `${minutes}:${('0' + seconds).slice(-2)}`;
-}
-
-function SetVisibility(isVisible, updateCurrentState = true) {
-	widgetVisibility = isVisible;
-
-	const mainContainer = document.getElementById("mainContainer");
-
-	if (isVisible) {
-		mainContainer.style.opacity = 1;
-		mainContainer.style.bottom = "50%";
-	}
-	else {
-		mainContainer.style.opacity = 0;
-		mainContainer.style.bottom = "calc(50% - 20px)";
-	}
-
-	if (updateCurrentState)
-		currentState = isVisible;
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// RESIZER THING BECAUSE I THINK I KNOW HOW RESPONSIVE DESIGN WORKS EVEN THOUGH I DON'T //
-//////////////////////////////////////////////////////////////////////////////////////////
-
-let outer = document.getElementById('mainContainer'),
-	maxWidth = outer.clientWidth+50,
-	maxHeight = outer.clientHeight;
-
-window.addEventListener("resize", resize);
-
-resize();
-function resize() {
-	const scale = window.innerWidth / maxWidth;
-	outer.style.transform = 'translate(-50%, 50%) scale(' + scale + ')';
-}
-
-
-
-/////////////////////////////////////////////////////////////////////
-// IF THE USER PUT IN THE HIDEALBUMART PARAMATER, THEN YOU SHOULD  //
-//   HIDE THE ALBUM ART, BECAUSE THAT'S WHAT IT'S SUPPOSED TO DO   //
-/////////////////////////////////////////////////////////////////////
-
-if (hideAlbumArt) {
-	document.getElementById("albumArtBox").style.display = "none";
-	document.getElementById("songInfoBox").style.width = "calc(100% - 20px)";
-}
-
-
-
-////////////////////////////////
-// KICK OFF THE WHOLE WIDGET  //
-////////////////////////////////
-
-RefreshAccessToken();
-GetCurrentlyPlaying();			// This is a recursive function, so just run it once
+updateProgress();
