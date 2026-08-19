@@ -179,3 +179,12 @@ html, body {
   display: block;
   padding: 0;
 }
+
+#songInfoBox {
+  position: relative;
+  color: white;
+  background: rgba(20, 20, 20, 0.88);
+  border-radius: var(--corner-radius);
+  overflow: hidden;
+  box-shadow: 8px 8px 15px rgba(0, 0, 0, 0.35);
+}
